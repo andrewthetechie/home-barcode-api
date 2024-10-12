@@ -43,7 +43,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             # set an edge tag
             type=edge,enable=true,priority=700,suffix=,branch=$repo.default_branch
-      - name: Build and push - librtlsdr
+      - name: Build and push
         id: docker-build
         uses: docker/build-push-action@v5
         with:
