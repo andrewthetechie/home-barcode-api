@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "home-barcode-api"
+version = "0.1.0"
+description = "An api to return info about barcodes for home automation"
+authors = ["Andrew Herrington <andrew.the.techie@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "barcode_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["standard"], version = "^0.115.0"}
+pydantic = "^2.9.2"
+python3-discogs-client = "^2.7"
+spotipy = "^2.24.0"
+fastapi-versionizer = "^4.0.1"
+asgi-correlation-id = "^4.3.3"
+structlog = "^24.4.0"
+uvicorn = "^0.31.1"
+pydantic-settings = "^2.5.2"
+
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^4.0.1"
+ruff = "^0.6.9"
+pytest = "^8.3.3"
+pytest-asyncio = "^0.24.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Same as Black.
+line-length = 120
+indent-width = 4
+# Assume Python 3.8
+target-version = "py312"
+
+[tool.ruff.lint]
+preview = true
+select = [
+    "F", "I", "UP", "S", "ASYNC", "B", "LOG", "EM", "RSE", "PL", "FAST", "RUF", "PERF"
+]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
