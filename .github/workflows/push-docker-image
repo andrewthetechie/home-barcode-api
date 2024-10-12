@@ -1,0 +1,58 @@
+# Runs after release-please creates a new release
+# Builds and pushes the docker images for the release
+name: Release Docker Images
+on:
+  push:
+    branch: main
+
+jobs:
+  build-and-push-dockerimage:
+    name: Buld and push dockerimage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.THIS_PAT }}
+      - name: Docker metadata
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: |
+            ${{ github.repository }}
+            ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ github.ref_name }},
+            # minimal (short sha)
+            type=sha,
+            # full length sha
+            type=sha,format=long
+            # set latest tag for default branch
+            type=raw,value=latest,enable={{is_default_branch}}
+            # set an edge tag
+            type=edge,enable=true,priority=700,suffix=,branch=$repo.default_branch
+      - name: Build and push - librtlsdr
+        id: docker-build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          # https://github.com/docker/build-push-action/blob/master/docs/advanced/cache.md#registry-cache
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
