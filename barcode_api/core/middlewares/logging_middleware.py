@@ -13,7 +13,6 @@ from uvicorn.protocols.utils import get_path_with_query_string
 from barcode_api.core.logging import configure_logger
 
 
-
 class CustomLoggingMiddleware(BaseHTTPMiddleware):
     """
     Adds an access log using the struclog formatted loggers

@@ -18,6 +18,11 @@ asgi-correlation-id = "^4.3.3"
 structlog = "^24.4.0"
 uvicorn = "^0.31.1"
 pydantic-settings = "^2.5.2"
+sqlalchemy = "^2.0.35"
+aiosqlite = "^0.20.0"
+greenlet = "^3.1.1"
+httpx = "^0.27.2"
+async-property = "^0.2.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -25,6 +30,9 @@ pre-commit = "^4.0.1"
 ruff = "^0.6.9"
 pytest = "^8.3.3"
 pytest-asyncio = "^0.24.0"
+poethepoet = "^0.29.0"
+alembic = "^1.13.3"
+pytest-env = "^1.1.5"
 
 [build-system]
 requires = ["poetry-core"]
@@ -48,3 +56,40 @@ select = [
 quote-style = "double"
 # Like Black, respect magic trailing commas.
 skip-magic-trailing-comma = false
+
+[tool.pytest]
+norecursedirs = ".github ci .git .idea"
+addopts = "--cov=barcode_api --cov-report xml:.coverage.xml --cov-report=term-missing"
+
+[tool.pytest_env]
+ba_spotify_client_id = "TESTING"
+ba_spotify_client_secret = "TESTING"
+ba_discogs_token = "TESTING"
+
+
+# https://github.com/nat-n/poethepoet
+# Task runner for poetry, no need for a Makefile
+[tool.poe.tasks.test]
+help = "Run the repo's tests"
+cmd = "poetry run pytest"
+
+[tool.poe.tasks.local_server]
+help = "Run the api locally with uvicorn in reload mode and debug logs"
+cmd = "poetry run uvicorn barcode_api.main:app --reload ${BA_UVICORN_ARGS}"
+[tool.poe.tasks.local_server.env]
+ba_log_level = "debug" 
+
+[tool.poe.tasks.local_server_json_logs]
+help = "Run the api locally with uvicorn in reload mode and debug logs outputting JSON"
+ref = "local_server"
+envfile = ".local.env"
+[tool.poe.tasks.local_server_json_logs.env]
+ba_log_json = "True" 
+BA_UVICORN_ARGS = "--no-access-log"
+
+[tool.poe.tasks.generate_migration]
+help = "Generate a new alembic migration"
+args = [
+    { name = "message", help = "Revision message", default = "No message"}
+]
+cmd = "alembic revision --autogenerate --message \"${message}\""
