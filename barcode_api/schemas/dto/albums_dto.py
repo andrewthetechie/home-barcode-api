@@ -8,7 +8,7 @@ class DiscogsAlbum(BaseModel):
     artist: str
     year: str
     genres: list[str] | None
-    url: AnyUrl
+    url: AnyUrl | str | None = None
     cover_image: AnyUrl
 
     @classmethod

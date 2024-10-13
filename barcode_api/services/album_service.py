@@ -1,4 +1,5 @@
 from functools import cached_property
+from http import HTTPStatus
 from logging import Logger
 from typing import Annotated, Any
 
@@ -22,7 +23,6 @@ class AlbumService(BarcodeServiceBase):
     async def search(self, barcode: str) -> tuple[SpotifyAlbumID, DiscogsAlbum]:
         discogs_albums = await self.discogs_service.search(barcode=barcode)
         spotify_id = await self.spotify_service.get_album_id(discogs_albums[0].artist, discogs_albums[0].name)
-
         return spotify_id, discogs_albums[0]
 
 
@@ -80,10 +80,12 @@ class SpotifyLookupService(HttpxService):
         }
         async with self._get_httpx_client() as client:
             response = await client.post(self.SPOTIFY_AUTH_URL, headers=headers, data=data)
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             return response.json()["access_token"]
         else:
-            raise Exception("Failed to get Spotify token")
+            self._logger.error("Error getting spotify token %s %s", response.status_code, response.json())
+            exception_msg = "Failed to get Spotify token"
+            raise Exception(exception_msg)
 
     async def get_album_id(self, artist_name, album_name):
         # Function to search for the album by artist and album name
@@ -99,7 +101,7 @@ class SpotifyLookupService(HttpxService):
         async with self._get_httpx_client() as client:
             response = await client.get(self.SPOTIFY_SEARCH_URL, headers=headers, params=params)
 
-        if response.status_code == 200:
+        if response.status_code == HTTPStatus.OK:
             albums = response.json().get("albums", {}).get("items", [])
             if albums:
                 album_id = albums[0]["id"]
@@ -107,4 +109,6 @@ class SpotifyLookupService(HttpxService):
             else:
                 return None  # No album found
         else:
-            raise Exception(f"Spotify API request failed with status code {response.status_code}")
+            self._logger.error("Error getting album ID %s %s", response.status_code, response.json())
+            err_msg = f"Spotify API request failed with status code {response.status_code}"
+            raise Exception(err_msg)
