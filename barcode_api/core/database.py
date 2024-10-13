@@ -14,7 +14,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 from barcode_api.core.config import Config, get_config
 
-ERROR_MESSAGES = dict[str, str] = {"NOT_INITIALIZED": "DatabaseSessionManager is not initialized"}
+ERROR_MESSAGES: dict[str, str] = {"NOT_INITIALIZED": "DatabaseSessionManager is not initialized"}
 
 
 class Base(DeclarativeBase):
