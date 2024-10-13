@@ -72,18 +72,23 @@ ba_discogs_token = "TESTING"
 help = "Run the repo's tests"
 cmd = "poetry run pytest"
 
+[tool.poe.tasks.run_migrations]
+help = "Run the DB migrations with alembic"
+cmd = "poetry run alembic upgrade head"
+
 [tool.poe.tasks.local_server]
 help = "Run the api locally with uvicorn in reload mode and debug logs"
 cmd = "poetry run uvicorn barcode_api.main:app --reload ${BA_UVICORN_ARGS}"
+deps = ["run_migrations"]
 [tool.poe.tasks.local_server.env]
-ba_log_level = "debug" 
+ba_log_level = "debug"
 
 [tool.poe.tasks.local_server_json_logs]
 help = "Run the api locally with uvicorn in reload mode and debug logs outputting JSON"
 ref = "local_server"
 envfile = ".local.env"
 [tool.poe.tasks.local_server_json_logs.env]
-ba_log_json = "True" 
+ba_log_json = "True"
 BA_UVICORN_ARGS = "--no-access-log"
 
 [tool.poe.tasks.generate_migration]

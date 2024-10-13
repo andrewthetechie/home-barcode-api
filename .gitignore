@@ -167,3 +167,6 @@ cython_debug/
 
 .ruff_cache/
 .python-version
+
+# the default sqlite path
+ba.db

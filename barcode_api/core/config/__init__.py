@@ -19,6 +19,8 @@ class LogLevel(StrEnum):
 class Config(BaseSettings):
     model_config = SettingsConfigDict(env_prefix=ENV_PREFIX)
 
+    api_name: str = "Barcode API"
+    docs_url: str = "/docs"
     env: str = "local"
 
     # logging options
@@ -33,6 +35,7 @@ class Config(BaseSettings):
     postgres_user: str | None = None
     postgres_pass: str | None = None
     postgres_db: str | None = None
+    echo_sql: bool = False
 
     # spotify config
     spotify_client_id: str

@@ -1,15 +1,17 @@
 from typing import Any
 
-from pydantic import AnyUrl, BaseModel
+from pydantic import AnyUrl, BaseModel, ConfigDict
 
 
 class DiscogsAlbum(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     name: str
     artist: str
     year: str
     genres: list[str] | None
-    url: AnyUrl | str | None = None
-    cover_image: AnyUrl
+    discogs_url: AnyUrl | str | None = None
+    cover_image_url: AnyUrl | None = None
 
     @classmethod
     def from_api_result(cls, discogs_api_result: dict[str, Any]):
@@ -21,9 +23,15 @@ class DiscogsAlbum(BaseModel):
             year=discogs_api_result["year"],
             genres=discogs_api_result["genre"],
             url=discogs_api_result["master_url"],
-            cover_image=discogs_api_result["cover_image"],
+            cover_image_url=discogs_api_result["cover_image"],
         )
 
 
 class Album(DiscogsAlbum):
     spotify_id: str
+
+    @classmethod
+    def model_validate(cls, this_obj) -> "DiscogsAlbum":
+        if isinstance(this_obj.genres, str):
+            this_obj.genres = this_obj.genres.split(",")
+        return super().model_validate(this_obj)

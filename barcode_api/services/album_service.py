@@ -6,8 +6,10 @@ from typing import Annotated, Any
 from async_property import async_property
 from httpx import AsyncClient
 from pydantic import StringConstraints
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from barcode_api.core.config import Config
+from barcode_api.models.albums import Album
 from barcode_api.schemas.dto.albums_dto import DiscogsAlbum
 from barcode_api.services._base import BarcodeServiceBase
 
@@ -15,20 +17,43 @@ SpotifyAlbumID = Annotated[str, StringConstraints(strip_whitespace=True, max_len
 
 
 class AlbumService(BarcodeServiceBase):
-    def __init__(self, config: Config, logger: Logger) -> None:
-        super().__init__(config, logger)
+    MODEL = Album
+
+    def __init__(self, config: Config, logger: Logger, db_session: AsyncSession) -> None:
+        super().__init__(config, logger, db_session)
         self.spotify_service = SpotifyLookupService(config, logger)
         self.discogs_service = DiscogsLookupService(config, logger)
 
-    async def search(self, barcode: str) -> tuple[SpotifyAlbumID, DiscogsAlbum]:
+    async def _lookup_album(self, barcode: str) -> Album | None:
         discogs_albums = await self.discogs_service.search(barcode=barcode)
         spotify_id = await self.spotify_service.get_album_id(discogs_albums[0].artist, discogs_albums[0].name)
-        return spotify_id, discogs_albums[0]
+        url = None if discogs_albums[0].discogs_url is None else str(discogs_albums[0].discogs_url)
+        cover_url = None if discogs_albums[0].cover_image_url is None else str(discogs_albums[0].cover_image_url)
+        album = Album(
+            barcode=barcode,
+            artist=discogs_albums[0].artist,
+            name=discogs_albums[0].name,
+            year=discogs_albums[0].year,
+            genres=",".join(discogs_albums[0].genres),
+            spotify_id=spotify_id,
+            discogs_url=url,
+            cover_image_url=cover_url,
+        )
+        return album
+
+    async def search(self, barcode: str) -> tuple[SpotifyAlbumID, DiscogsAlbum]:
+        album = await self._get_fom_cache(value=barcode)
+        if album is None:
+            album = await self._lookup_album(barcode)
+            await self._add_to_cache(album)
+
+        return album
 
 
-class HttpxService(BarcodeServiceBase):
+class HttpxService:
     def __init__(self, config: Config, logger: Logger, httpx_client_config: dict[str, Any] | None = None) -> None:
-        super().__init__(config, logger)
+        self._config: Config = config
+        self._logger: Logger = logger
         self.httpx_client_config = httpx_client_config if httpx_client_config is not None else dict()
 
     def _get_httpx_client(self):
