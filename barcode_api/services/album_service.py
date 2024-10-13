@@ -40,7 +40,10 @@ class DiscogsLookupService(HttpxService):
 
     @cached_property
     def headers(self):
-        return {"Authorization": f"Discogs token={self._config.discogs_token}"}
+        return {
+            "Authorization": f"Discogs token={self._config.discogs_token}",
+            "User-Agent": "HomeBarcodeAPI/0.1 +https://github.com/andrewthetechie/home-barcode-api",
+        }
 
     async def search(self, barcode: str) -> list[DiscogsAlbum]:
         this_search_url = f"{self.DISCOGS_SEARCH_URL}?barcode={barcode}"

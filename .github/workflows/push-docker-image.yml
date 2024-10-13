@@ -34,9 +34,9 @@ jobs:
             ${{ github.repository }}
             ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=${{ github.ref_name }},
+            type=raw,value=${{ github.ref_name }}
             # minimal (short sha)
-            type=sha,
+            type=sha
             # full length sha
             type=sha,format=long
             # set latest tag for default branch
