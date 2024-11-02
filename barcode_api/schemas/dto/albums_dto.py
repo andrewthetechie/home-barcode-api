@@ -20,7 +20,7 @@ class DiscogsAlbum(BaseModel):
         return cls(
             name=title_split[1].lstrip(),
             artist=title_split[0].rstrip(),
-            year=discogs_api_result["year"],
+            year=discogs_api_result.get("year", "Unknown"),
             genres=discogs_api_result["genre"],
             url=discogs_api_result["master_url"],
             cover_image_url=discogs_api_result["cover_image"],

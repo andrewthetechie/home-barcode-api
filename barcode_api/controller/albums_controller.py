@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from barcode_api.core.dependencies.database import DBSessionDep
 from barcode_api.schemas.dto.albums_dto import Album as AlbumDTO
+from barcode_api.schemas.dto.errors_dto import ErrorResponse
 from barcode_api.services import AlbumService
 
 
@@ -20,8 +21,11 @@ albums_router = APIRouter(prefix="/album", dependencies=[Depends(get_album_servi
 BarcodeQuery = Annotated[str, Query(title="The Barcode to search")]
 
 
-@albums_router.get("/")
+@albums_router.get("/search", responses={"404": {"model": ErrorResponse}})
 async def get_album_by_barcode(barcode: BarcodeQuery, album_service: AlbumServiceDependency) -> AlbumDTO:
-    album = await album_service.search(barcode=barcode)
+    try:
+        album = await album_service.search(barcode=barcode)
+    except AlbumService.NotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     return AlbumDTO.model_validate(album)

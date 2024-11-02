@@ -1,3 +1,4 @@
+import re
 from functools import cached_property
 from http import HTTPStatus
 from logging import Logger
@@ -9,14 +10,29 @@ from pydantic import StringConstraints
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from barcode_api.core.config import Config
+from barcode_api.core.errors import BarcodeAPIBaseException
 from barcode_api.models.albums import Album
 from barcode_api.schemas.dto.albums_dto import DiscogsAlbum
 from barcode_api.services._base import BarcodeServiceBase
 
 SpotifyAlbumID = Annotated[str, StringConstraints(strip_whitespace=True, max_length=22, min_length=22)]
 
+# Strips out any (##) from the artist
+DISCOGS_ARTIST_CLEANUP_REGEX = re.compile(r"\(\d+\)")
+
 
 class AlbumService(BarcodeServiceBase):
+    class NotFoundError(BarcodeAPIBaseException):
+        pass
+
+    class NoSpotifyFoundError(NotFoundError):
+        ERROR_TEXT = "No spotify album found for %s - %s"
+        pass
+
+    class NoDiscogsAlbumFoundError(NotFoundError):
+        ERROR_TEXT = "No Discogs album found for barcode %s"
+        pass
+
     MODEL = Album
 
     def __init__(self, config: Config, logger: Logger, db_session: AsyncSession) -> None:
@@ -26,12 +42,19 @@ class AlbumService(BarcodeServiceBase):
 
     async def _lookup_album(self, barcode: str) -> Album | None:
         discogs_albums = await self.discogs_service.search(barcode=barcode)
-        spotify_id = await self.spotify_service.get_album_id(discogs_albums[0].artist, discogs_albums[0].name)
+        if len(discogs_albums) == 0:
+            raise self.__class__.NoDiscogsAlbumFoundError(self.__class__.NoDiscogsAlbumFoundError.ERROR_TEXT % barcode)
+        cleaned_artist = DISCOGS_ARTIST_CLEANUP_REGEX.sub("", discogs_albums[0].artist).strip()
+        spotify_id = await self.spotify_service.get_album_id(cleaned_artist, discogs_albums[0].name)
+        if spotify_id is None:
+            raise self.__class__.NoSpotifyFoundError(
+                self.__class__.NoSpotifyFoundError.ERROR_TEXT % (cleaned_artist, discogs_albums[0].name)
+            )
         url = None if discogs_albums[0].discogs_url is None else str(discogs_albums[0].discogs_url)
         cover_url = None if discogs_albums[0].cover_image_url is None else str(discogs_albums[0].cover_image_url)
         album = Album(
             barcode=barcode,
-            artist=discogs_albums[0].artist,
+            artist=cleaned_artist,
             name=discogs_albums[0].name,
             year=discogs_albums[0].year,
             genres=",".join(discogs_albums[0].genres),

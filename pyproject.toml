@@ -75,10 +75,12 @@ cmd = "poetry run pytest"
 [tool.poe.tasks.run_migrations]
 help = "Run the DB migrations with alembic"
 cmd = "poetry run alembic upgrade head"
+envfile = ".local.env"
 
 [tool.poe.tasks.local_server]
 help = "Run the api locally with uvicorn in reload mode and debug logs"
 cmd = "poetry run uvicorn barcode_api.main:app --reload ${BA_UVICORN_ARGS}"
+envfile = ".local.env"
 deps = ["run_migrations"]
 [tool.poe.tasks.local_server.env]
 ba_log_level = "debug"
@@ -97,3 +99,9 @@ args = [
     { name = "message", help = "Revision message", default = "No message"}
 ]
 cmd = "alembic revision --autogenerate --message \"${message}\""
+envfile = ".local.env"
+
+[tool.poe.tasks.ipython]
+help = "Run ipython in the project space with loaded env"
+cmd = "ipython"
+envfile = ".local.env"

@@ -17,8 +17,8 @@ class CacheTable(Base):
 class Album(CacheTable):
     __tablename__ = "albums"
 
-    artist: Mapped[str] = mapped_column(index=True, unique=True)
-    name: Mapped[str] = mapped_column(index=True, unique=True)
+    artist: Mapped[str] = mapped_column(index=True)
+    name: Mapped[str] = mapped_column(index=True)
     year: Mapped[str] = mapped_column()
     genres: Mapped[str] = mapped_column()
     spotify_id: Mapped[str] = mapped_column(index=True)
