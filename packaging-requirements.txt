@@ -26,7 +26,7 @@ ptyprocess==0.7.0
 pycparser==2.22
 pyproject_hooks==1.2.0
 RapidFuzz==3.10.0
-requests==2.32.3
+requests==2.32.4
 requests-toolbelt==1.0.0
 shellingham==1.5.4
 tomlkit==0.13.2
