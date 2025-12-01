@@ -11,7 +11,7 @@ packages = [{include = "barcode_api"}]
 python = "^3.12"
 fastapi = {extras = ["standard"], version = "^0.115.0"}
 pydantic = "^2.9.2"
-spotipy = "^2.24.0"
+spotipy = "^2.25.2"
 fastapi-versionizer = "^4.0.1"
 asgi-correlation-id = "^4.3.3"
 structlog = "^24.4.0"
