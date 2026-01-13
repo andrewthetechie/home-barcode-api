@@ -32,5 +32,5 @@ shellingham==1.5.4
 tomlkit==0.13.2
 trove-classifiers==2024.10.11
 urllib3==2.2.3
-virtualenv==20.26.6
+virtualenv==20.36.1
 xattr==1.1.0
